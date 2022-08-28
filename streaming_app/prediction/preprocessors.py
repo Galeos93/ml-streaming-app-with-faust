@@ -4,7 +4,6 @@ import typing
 
 from nltk.corpus import stopwords
 import numpy as np
-from tensorflow.keras.utils import pad_sequences
 
 
 STOPWORDS = list(stopwords.words("english"))
@@ -52,8 +51,8 @@ def lemmatize_text(
 def digest_sentences(
     sentences: typing.List[str],
     tokenizer: typing.Callable[[typing.List[str]], typing.List[int]],
-    preprocess: typing.Callable[[typing.List[typing.List[int]]], np.ndarray],
+    preprocessor: typing.Callable[[typing.List[typing.List[int]]], np.ndarray],
 ):
     text_sequences = tokenizer(sentences)
-    model_input = preprocess(text_sequences)
+    model_input = preprocessor(text_sequences)
     return model_input

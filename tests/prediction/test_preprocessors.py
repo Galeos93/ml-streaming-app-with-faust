@@ -5,6 +5,7 @@ from turtle import clear
 from nltk.stem import WordNetLemmatizer
 import numpy as np
 import pytest
+from tensorflow.keras.preprocessing.text import Tokenizer
 
 from streaming_app.prediction import preprocessors
 
@@ -64,21 +65,58 @@ class TestLemmatizeText:
         assert clean_tweet == expected_clean_tweet
 
 
+@pytest.fixture()
+def all_ones_tokenizer():
+    def inner_fun(sentences):
+        return [[1] * len(x.split(" ")) for x in sentences]
+
+    return inner_fun
+
+
+@pytest.fixture()
+def keras_tokenizer():
+    lines = ["hi how are you doing I am fine, how about you Here it is 8:00 am"]
+    tokenizer = Tokenizer()
+    tokenizer.fit_on_texts(lines)
+    return tokenizer.texts_to_sequences
+
+
 class TestDigestSentences:
     @staticmethod
-    def test_given_sentences_output_array_is_correct():
-        def _tokenizer(sentences):
-            return [[1] * len(x.split(" ")) for x in sentences]
+    @pytest.mark.parametrize(
+        "tokenizer,expected_output",
+        [
+            (
+                "all_ones_tokenizer",
+                np.array(
+                    [[1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1]], dtype=object
+                ),
+            ),
+            (
+                "keras_tokenizer",
+                np.array(
+                    [[4, 1, 5, 2, 6], [7, 3, 8, 1, 9, 2], [10, 11, 12, 13, 14, 3]],
+                    dtype=object,
+                ),
+            ),
+        ],
+    )
+    def test_given_sentences_output_array_is_correct(
+        tokenizer, expected_output, request
+    ):
 
         sentences = [
             "hi how are you doing",
             "I am fine, how about you",
             "Here it is 8:00 am",
         ]
+        tokenizer = request.getfixturevalue(tokenizer)
         model_input = preprocessors.digest_sentences(
-            sentences, tokenizer=_tokenizer, preprocess=np.array
+            sentences,
+            tokenizer=tokenizer,
+            preprocessor=functools.partial(np.array, dtype=object),
         )
         np.testing.assert_array_equal(
             model_input,
-            np.array([[1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1]]),
+            expected_output,
         )

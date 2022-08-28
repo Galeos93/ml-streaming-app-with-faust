@@ -1,2 +1,6 @@
 faust-streaming
 scikit-learn
+bentoml
+nltk
+tensorflow
+pandas
