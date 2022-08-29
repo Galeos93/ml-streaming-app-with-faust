@@ -48,4 +48,3 @@ def test_disaster_classifier_speed(repetitions=100):
         times.append(elapsed)
 
     print(f"Mean {np.mean(times)*100} ms; STD {np.std(times)*100}")
-    assert False

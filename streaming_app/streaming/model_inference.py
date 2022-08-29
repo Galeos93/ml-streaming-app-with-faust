@@ -1,17 +1,22 @@
 import functools
+from lib2to3.pgen2 import token
 
 import faust
 from nltk.stem import WordNetLemmatizer
+import tensorflow as tf
 from tensorflow.keras.utils import pad_sequences
 
-from streaming_app.prediction import model, Model
+from streaming_app.prediction import model
 from streaming_app.prediction import preprocessors
-from streaming_app.prediction.model import tokenizer, model_id
 from streaming_app.prediction.preprocessors import (
     clean_tweet,
 )
 
 app = faust.App("model_prediction", broker="kafka://", store="rocksdb://")
+bento_model = model.load_model()
+runnable_model = bento_model.to_runner()
+runnable_model.init_local()
+tokenizer = bento_model.custom_objects["tokenizer"]
 
 
 class ModelInputRecord(faust.Record):
@@ -25,27 +30,15 @@ class ModelOutputRecord(faust.Record):
 
 
 input_topic = app.topic(
-    f"{model_id}_input",
+    f"{model.MODEL_ID}_input",
     key_type=bytes,
     value_type=ModelInputRecord,
 )
 output_topic = app.topic(
-    f"{model_id}_output",
+    f"{model.MODEL_ID}_output",
     key_type=bytes,
     value_type=ModelOutputRecord,
 )
-
-"""
-encoded_docs = tokenizer.texts_to_sequences(X_train.tolist())
-
-# embedding layer require all the encoded sequences to be of the same length, lets take max lenght as 100
-# and apply padding on the sequences which are of lower size
-
-padded_docs = pad_sequences(encoded_docs, maxlen=max_length, padding='post')
-
-
-"""
-
 
 _lemmatizer = functools.partial(
     preprocessors.lemmatize_text,
@@ -60,10 +53,11 @@ _cnn_text_digestor = functools.partial(
 )
 
 
-disaster_classifier = Model(
-    model=model,
-    preprocess=lambda x: _cnn_text_digestor(
-        [_lemmatizer(clean_tweet(sentence)) for sentence in x]
+disaster_classifier = model.Model(
+    runner=runnable_model,
+    preprocess=lambda x: tf.convert_to_tensor(
+        _cnn_text_digestor([_lemmatizer(clean_tweet(sentence)) for sentence in x]),
+        dtype=tf.float32,
     ),
     postprocess=lambda x: x,
 )
@@ -73,7 +67,7 @@ disaster_classifier = Model(
 async def inference_agent(stream):
     """Agent that receives the model and input and outputs the inference."""
     async for _, value in stream.items():
-        prediction = disaster_classifier.predict(value)
+        prediction = disaster_classifier.predict([value])
         yield prediction
 
 
