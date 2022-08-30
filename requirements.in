@@ -4,3 +4,5 @@ bentoml
 nltk
 tensorflow
 pandas
+pytest
+pytest-asyncio

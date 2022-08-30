@@ -3,3 +3,6 @@ env-create:
 
 env-compile:
 	pip-compile requirements.in
+
+test:
+	pytest tests

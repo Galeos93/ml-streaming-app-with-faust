@@ -1,5 +1,5 @@
 import functools
-from lib2to3.pgen2 import token
+import typing
 
 import faust
 from nltk.stem import WordNetLemmatizer
@@ -20,13 +20,11 @@ tokenizer = bento_model.custom_objects["tokenizer"]
 
 
 class ModelInputRecord(faust.Record):
-    name: str
     value: str
 
 
 class ModelOutputRecord(faust.Record):
-    name: str
-    value: float
+    value: typing.List[float]
 
 
 input_topic = app.topic(
@@ -63,11 +61,12 @@ disaster_classifier = model.Model(
 )
 
 
-@app.agent(input_topic, sink=[output_topic])
+@app.agent(input_topic)  # , sink=[output_topic])
 async def inference_agent(stream):
     """Agent that receives the model and input and outputs the inference."""
-    async for _, value in stream.items():
-        prediction = disaster_classifier.predict([value])
+    async for _, model_input in stream.items():
+        prediction = disaster_classifier.predict([model_input.value])
+        prediction = [float(x[0]) for x in prediction]
         yield prediction
 
 
