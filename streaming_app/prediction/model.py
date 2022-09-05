@@ -4,7 +4,6 @@ import os
 import pathlib
 
 import bentoml
-from tensorflow.keras.preprocessing.text import tokenizer_from_json
 
 
 MODEL_ID = os.environ.get("MODEL_IDENTIFIER", "disaster_tweet_detector:latest")
