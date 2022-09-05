@@ -61,7 +61,7 @@ disaster_classifier = model.Model(
 )
 
 
-@app.agent(input_topic)  # , sink=[output_topic])
+@app.agent(input_topic, sink=[output_topic])
 async def inference_agent(stream):
     """Agent that receives the model and input and outputs the inference."""
     async for _, model_input in stream.items():

@@ -1,0 +1,1 @@
+from streaming_app.streaming.model_inference import app

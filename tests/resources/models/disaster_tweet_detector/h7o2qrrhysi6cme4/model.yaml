@@ -1,0 +1,23 @@
+name: disaster_tweet_detector
+version: h7o2qrrhysi6cme4
+module: bentoml.tensorflow
+labels:
+  stage: dev
+options:
+  partial_kwargs: {}
+metadata:
+  acc: 0.9794745445251465
+context:
+  framework_name: tensorflow
+  framework_versions:
+    tensorflow: 2.9.1
+  bentoml_version: 1.0.4
+  python_version: 3.7.5
+signatures:
+  __call__:
+    batchable: true
+    batch_dim:
+    - 0
+    - 0
+api_version: v1
+creation_time: '2022-08-29T17:58:55.692732+00:00'

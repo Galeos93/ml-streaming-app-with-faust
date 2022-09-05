@@ -1,4 +1,5 @@
 import time
+from unittest.mock import Mock, MagicMock
 
 import numpy as np
 import pytest
@@ -6,7 +7,12 @@ import pytest
 from streaming_app.streaming import model_inference
 
 
-def test_given_sentences_model_output_is_expected():
+@pytest.fixture()
+def bento_model(model, monkeypatch):
+    monkeypatch.setattr(model_inference, "bento_model", model)
+
+
+def test_given_sentences_model_output_is_expected(bento_model):
     output = model_inference.disaster_classifier.predict(
         [
             "Our Deeds are the Reason of this #earthquake May ALLAH Forgive us all",
@@ -24,8 +30,9 @@ def test_given_sentences_model_output_is_expected():
     )
 
 
-def test_disaster_classifier_speed(repetitions=100):
+def test_disaster_classifier_speed(bento_model):
     times = []
+    repetitions = 100
 
     # First inference is discarded.
     model_inference.disaster_classifier.predict(
@@ -49,18 +56,12 @@ def test_disaster_classifier_speed(repetitions=100):
         times.append(elapsed)
 
     print(f"Mean {np.mean(times)*100} ms; STD {np.std(times)*100}")
+    print(f"99.9 percentile {np.percentile(times, q=99.0)*100} ms")
 
 
 @pytest.fixture()
-def input_topic():
-    # TODO: Check how to mock a topic
-    pass
-
-
-@pytest.fixture()
-def output_topic():
-    # TODO: Check how to mock a topic
-    pass
+def output_topic(return_value=None, **kwargs):
+    return MagicMock()
 
 
 @pytest.fixture()
@@ -75,24 +76,37 @@ def test_app(event_loop):
 class TestInferenceAgent:
     @staticmethod
     @pytest.mark.asyncio()
-    async def test_given_message_to_agent_output_topic_is_correct(test_app):
-
+    async def test_given_message_to_agent_output_topic_is_correct(
+        test_app, output_topic, bento_model
+    ):
         message_value = (
             "Our Deeds are the Reason of this #earthquake May ALLAH Forgive us all"
         )
-        async with model_inference.inference_agent.test_context() as agent:
+        async with model_inference.inference_agent.test_context(
+            sink=[output_topic]
+        ) as agent:
             model_input = model_inference.ModelInputRecord(value=message_value)
             # Sent model_input to the test agents local channel, and wait
             # the agent to process it.
             event = await agent.put(model_input)
             # Check that the agent returns the correct inference
             np.testing.assert_almost_equal(
-                agent.results[event.message.offset], 0.98977554
+                agent.results[event.message.offset], [0.98977554]
             )
 
-        @staticmethod
-        def test_given_message_then_agent_outputs_inference_to_output_topic(
-            monkeypatch, input_topic, output_topic
-        ):
-            monkeypatch.setattr(model_inference, "input_topic", input_topic)
-            monkeypatch.setattr(model_inference, "output_topic", output_topic)
+    @staticmethod
+    @pytest.mark.asyncio()
+    async def test_given_message_then_agent_outputs_inference_to_output_topic(
+        test_app, output_topic, bento_model
+    ):
+        message_value = (
+            "Our Deeds are the Reason of this #earthquake May ALLAH Forgive us all"
+        )
+        async with model_inference.inference_agent.test_context(
+            sink=[output_topic]
+        ) as agent:
+            model_input = model_inference.ModelInputRecord(value=message_value)
+            await agent.put(model_input)
+            np.testing.assert_almost_equal(
+                [0.98977554], output_topic.call_args_list[0][0][0]
+            )
