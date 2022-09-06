@@ -1,3 +1,5 @@
+"""Utilities to process the model inputs before they are fed to the model."""
+
 import re
 import string
 import typing
@@ -12,6 +14,7 @@ STOPWORDS_PUNCTUATION = STOPWORDS + PUNCTUATION
 
 
 def remove_emojis(text: str) -> str:
+    """Removes emojis from text."""
     emoji_pattern = re.compile(
         "["
         u"\U0001F600-\U0001F64F"  # emoticons
@@ -27,12 +30,24 @@ def remove_emojis(text: str) -> str:
 
 
 def clean_tweet(text: str) -> str:
+    """Cleans a tweet.
+
+    Notes
+    -----
+    The text undergoes a series of transformation before it is considered clean:
+
+    - Emoji removal
+    - URL removal
+    - Special character removal
+    - Uppercase to lowercase transformation
+
+    """
     text = remove_emojis(text)
     text = re.sub(r"https?:\/\/t.co\/[A-Za-z0-9]+", "", text)  # removing urls
     text = re.sub(
-        "[^\w]", " ", text
+        r"[^\w]", " ", text
     )  # remove embedded special characters in words (for example #earthquake)
-    text = re.sub("[\d]", "", text)  # this will remove numeric characters
+    text = re.sub(r"[\d]", "", text)  # this will remove numeric characters
     text = text.lower()
     return text
 
@@ -42,9 +57,10 @@ def lemmatize_text(
     lemmatizer: typing.Callable[[str], typing.List[str]],
     filter_fun: typing.Callable[[str], str],
 ) -> str:
+    """Transforms words into their lemmas and subsequently filters them."""
     words = text.split()
     lemmatized_words = [lemmatizer(w) for w in words]
-    sentence = " ".join([w for w in filter(filter_fun, lemmatized_words)])
+    sentence = " ".join(list(filter(filter_fun, lemmatized_words)))
     return sentence
 
 
@@ -53,6 +69,7 @@ def digest_sentences(
     tokenizer: typing.Callable[[typing.List[str]], typing.List[int]],
     preprocessor: typing.Callable[[typing.List[typing.List[int]]], np.ndarray],
 ):
+    """Tokenization and processing of a sentence."""
     text_sequences = tokenizer(sentences)
     model_input = preprocessor(text_sequences)
     return model_input

@@ -6,3 +6,6 @@ env-compile:
 
 test:
 	pytest tests
+
+lint:
+	pylint streaming_app

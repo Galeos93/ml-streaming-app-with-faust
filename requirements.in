@@ -4,5 +4,6 @@ bentoml
 nltk
 tensorflow
 pandas
+pylint
 pytest
 pytest-asyncio

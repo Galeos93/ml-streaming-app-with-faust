@@ -27,6 +27,8 @@ appdirs==1.4.4
     # via fs
 asgiref==3.5.2
     # via opentelemetry-instrumentation-asgi
+astroid==2.12.8
+    # via pylint
 astunparse==1.6.3
     # via tensorflow
 async-timeout==4.0.2
@@ -80,6 +82,8 @@ deepmerge==1.0.1
     # via bentoml
 deprecated==1.2.13
     # via opentelemetry-api
+dill==0.3.5.1
+    # via pylint
 exceptiongroup==1.0.0rc9
     # via cattrs
 faust-streaming==0.8.8
@@ -128,6 +132,8 @@ iniconfig==1.1.1
     # via pytest
 intervaltree==3.1.0
     # via faust-streaming
+isort==5.10.1
+    # via pylint
 jinja2==3.1.2
     # via bentoml
 joblib==1.1.0
@@ -140,6 +146,8 @@ keras==2.9.0
     # via tensorflow
 keras-preprocessing==1.1.2
     # via tensorflow
+lazy-object-proxy==1.7.1
+    # via astroid
 libclang==14.0.6
     # via tensorflow
 markdown==3.4.1
@@ -148,6 +156,8 @@ markupsafe==2.1.1
     # via
     #   jinja2
     #   werkzeug
+mccabe==0.7.0
+    # via pylint
 mode-streaming==0.2.0
     # via faust-streaming
 multidict==6.0.2
@@ -220,6 +230,8 @@ pep517==0.13.0
     # via build
 pip-tools==6.8.0
     # via bentoml
+platformdirs==2.5.2
+    # via pylint
 pluggy==1.0.0
     # via pytest
 prometheus-client==0.13.1
@@ -242,6 +254,8 @@ pyasn1-modules==0.2.8
     # via google-auth
 pygments==2.13.0
     # via rich
+pylint==2.15.0
+    # via -r requirements.in
 pynvml==11.4.1
     # via bentoml
 pyparsing==3.0.9
@@ -327,22 +341,29 @@ tomli==2.0.1
     # via
     #   build
     #   pep517
+    #   pylint
     #   pytest
+tomlkit==0.11.4
+    # via pylint
 tornado==6.2
     # via circus
 tqdm==4.64.0
     # via nltk
+typed-ast==1.5.4
+    # via astroid
 typing-extensions==4.3.0
     # via
     #   aiohttp
     #   anyio
     #   asgiref
+    #   astroid
     #   async-timeout
     #   cattrs
     #   h11
     #   importlib-metadata
     #   mode-streaming
     #   opentelemetry-sdk
+    #   pylint
     #   pytest-asyncio
     #   rich
     #   starlette
@@ -366,6 +387,7 @@ wheel==0.37.1
     #   tensorboard
 wrapt==1.14.1
     # via
+    #   astroid
     #   deprecated
     #   opentelemetry-instrumentation
     #   opentelemetry-instrumentation-aiohttp-client

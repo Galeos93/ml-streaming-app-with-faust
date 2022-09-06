@@ -1,10 +1,11 @@
+"""Configures a Faust agent that processes tweets from Kafka and returns inferences."""
 import functools
 import typing
 
 import faust
 from nltk.stem import WordNetLemmatizer
 import tensorflow as tf
-from tensorflow.keras.utils import pad_sequences
+from tensorflow.keras.utils import pad_sequences  # pylint: disable=import-error,no-name-in-module
 
 from streaming_app.prediction import model
 from streaming_app.prediction import preprocessors
@@ -19,11 +20,27 @@ runnable_model.init_local()
 tokenizer = bento_model.custom_objects["tokenizer"]
 
 
-class ModelInputRecord(faust.Record):
+class ModelInputRecord(faust.Record):  # pylint: disable=abstract-method
+    """Record that defines the format of the data that the agent will receive.
+
+    Notes
+    -----
+    The input of the model consists on tweets, formatted as str.
+
+    """
+
     value: str
 
 
-class ModelOutputRecord(faust.Record):
+class ModelOutputRecord(faust.Record):  # pylint: disable=abstract-method
+    """Record that defines the format of the data that the agent will return.
+
+    Notes
+    -----
+    The inferences returned by the model will be formatted as list of floats.
+
+    """
+
     value: typing.List[float]
 
 
@@ -68,7 +85,3 @@ async def inference_agent(stream):
         prediction = disaster_classifier.predict([model_input.value])
         prediction = [float(x[0]) for x in prediction]
         yield prediction
-
-
-if __name__ == "__main__":
-    app.main()
