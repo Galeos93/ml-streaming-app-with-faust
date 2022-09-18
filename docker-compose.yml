@@ -1,0 +1,29 @@
+version: '3'
+services:
+  zookeeper:
+    image: zookeeper
+    environment:
+      ZOO_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+  kafka-cluster:
+    image: bitnami/kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+    # KAFKA_LISTENERS: URIs that the broker will listen to for incoming TCP connections.
+    # KAFKA_ADVERTISED_LISTENERS: URIs used by the clients to connect to the broker
+    # KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: We map each of the protocols to a security protocol (e.g., PLAINTEXT)
+    environment:
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_CFG_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENERS: "EXTERNAL_SAME_HOST://:29092,INTERNAL_HOST://:9092"
+      KAFKA_ADVERTISED_LISTENERS: "EXTERNAL_SAME_HOST://localhost:29092,INTERNAL_HOST://kafka-cluster:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "EXTERNAL_SAME_HOST:PLAINTEXT,INTERNAL_HOST:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL_HOST
+  streaming-app:
+    image: streaming_app
+    tty: true
+    depends_on:
+      - kafka-cluster
