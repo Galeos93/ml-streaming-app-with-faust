@@ -9,3 +9,6 @@ test:
 
 lint:
 	pylint streaming_app
+
+run-worker:
+	BROKER_URI=$(BROKER_URI); faust -A streaming_app worker -l info

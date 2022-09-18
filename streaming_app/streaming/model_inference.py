@@ -1,11 +1,35 @@
-"""Configures a Faust agent that processes tweets from Kafka and returns inferences."""
+"""Configures a Faust agent that processes tweets from Kafka and returns inferences.
+
+Notes
+-----
+In this module, the streaming application is created. The application
+contains an agent, `inference_agent, that is subscribed to the topic `incoming_tweet`
+and processes it, returning a prediction about whether or not the tweet mentions a
+natural disaster. This prediction is broadcasted to the `tweet_disaster_inference`
+topic.
+
+Example
+-------
+If you have successfully setup Kafka and created an `incoming_tweet`, you
+can start up an app's worker with the following command::
+
+$ faust -A streaming_app worker -l info
+
+To send and event to the `incoming_tweet` topic, you can do the following::
+
+$ faust -A streaming_app send disaster_tweet_detector_input '{"value": "Hello world"}'
+
+"""
 import functools
+import os
 import typing
 
 import faust
 from nltk.stem import WordNetLemmatizer
 import tensorflow as tf
-from tensorflow.keras.utils import pad_sequences  # pylint: disable=import-error,no-name-in-module
+from tensorflow.keras.utils import (  # pylint: disable=import-error,no-name-in-module
+    pad_sequences,
+)
 
 from streaming_app.prediction import model
 from streaming_app.prediction import preprocessors
@@ -13,7 +37,9 @@ from streaming_app.prediction.preprocessors import (
     clean_tweet,
 )
 
-app = faust.App("model_prediction", broker="kafka://", store="rocksdb://")
+BROKER_URI = os.environ.get("BROKER_URI", "localhost:29092")
+
+app = faust.App("model_prediction", broker=f"kafka://{BROKER_URI}", store="rocksdb://")
 bento_model = model.load_model()
 runnable_model = bento_model.to_runner()
 runnable_model.init_local()
@@ -45,13 +71,13 @@ class ModelOutputRecord(faust.Record):  # pylint: disable=abstract-method
 
 
 input_topic = app.topic(
-    f"{model.MODEL_ID}_input",
-    key_type=bytes,
+    "incoming_tweet",
+    key_type=None,
     value_type=ModelInputRecord,
 )
 output_topic = app.topic(
-    f"{model.MODEL_ID}_output",
-    key_type=bytes,
+    "tweet_disaster_inference",
+    key_type=None,
     value_type=ModelOutputRecord,
 )
 
@@ -81,7 +107,7 @@ disaster_classifier = model.Model(
 @app.agent(input_topic, sink=[output_topic])
 async def inference_agent(stream):
     """Agent that receives the model and input and outputs the inference."""
-    async for _, model_input in stream.items():
+    async for model_input in stream:
         prediction = disaster_classifier.predict([model_input.value])
         prediction = [float(x[0]) for x in prediction]
         yield prediction
