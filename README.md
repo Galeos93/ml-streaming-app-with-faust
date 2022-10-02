@@ -7,7 +7,7 @@ Powered by Faust, Kafka, and Tensorflow.
 
 This project was born as a means to learn more about machine learning systems
 for real-time applications. This is becoming an increasingly popular field, especially
-in fields such as recommender systems or fraud detection.
+in fields such as recommendation systems or fraud detection.
 
 ## Design considerations
 
@@ -17,7 +17,7 @@ worth mentioning, which will be briefly described in the section `Other possible
 
 I will use Kafka as the real-time data source since it is a mature technology that can handle
 millions of events per second. When creating a streaming application with an embedded model, a common
-approach is using `Kafka Streams`, which is a library programmed in java. However, I feel comfortable programming in python. So,
+approach is using `Kafka Streams`, which is a library programmed in Java. However, I feel comfortable programming in Python. So,
 I decided to use `Faust`, which is fully in Python and tries to cover the same requirements as `Kafka Streams`.
 Finally, for the model inference, I will use `TensorFlow`.
 
@@ -61,29 +61,51 @@ flowchart LR
 ```
 
 Although this is out of the scope of this project, some model servers available
-are aware of the latencies and offer communication with Kafka Stream applications
-via the native Kafka protocol, which would eliminate the problem of latencies.
+are aware of the high latencies and offer communication with Kafka Stream applications
+via the native Kafka protocol, which would eliminate such problem.
 This is covered in [3]. Moreover, TensorFlow I/O offers a way to directly connect
 to a Kafka Cluster to do inferences or even train a model.
 
 
 ## Making it run
 
-- Deploy the docker-compose and make calls to it: `docker-compose up`.
-- Create topic for input tweets: `BROKER_URI="kafka-cluster:9092"; docker exec mlstreamingappwithfaust_kafka-cluster_1 /opt/bitnami/kafka/bin/kafka-topics.sh --create --bootstrap-server $BROKER_URI --replication-factor 1 --partitions 3 --topic incoming_tweet`
-- Start a Faust Worker: `docker exec mlstreamingappwithfaust_streaming-app_1 make run-worker`
+First, you need to set up the Kafka cluster and the streaming application. Execute
+the following commands from the repository's folder:
 
-To test the system:
+- `docker build -t streaming_app .`
+- `docker-compose up`
 
-- `./kafka-console-producer.sh --topic incoming_tweet --bootstrap-server localhost:29092`
-- `./kafka-console-consumer.sh --bootstrap-serlocalhost:29092 --from-beginning --topic tweet_disaster_inference`
+After the system is up, you need to create a topic for the input tweets. To do so, execute
+the following commands on a new terminal:
 
+- `BROKER_URI="kafka-cluster:9092"; docker exec mlstreamingappwithfaust_kafka-cluster_1 /opt/bitnami/kafka/bin/kafka-topics.sh --create --bootstrap-server $BROKER_URI --replication-factor 1 --partitions 3 --topic incoming_tweet`
 
-run-system:
-	docker-compose up && \
-	docker exec -d mlstreamingappwithfaust_kafka-cluster_1 /opt/bitnami/kafka/bin/kafka-topics.sh --create --bootstrap-server $(BROKER_URI) --replication-factor 1 --partitions 3 --topic incoming_tweet && \
-	docker exec -d mlstreamingappwithfaust_streaming-app_1 make run-worker
+With the topic created, you can start up a Faust worker that will consume events from the
+`incoming_tweet` topic:
 
+- `docker exec mlstreamingappwithfaust_streaming-app_1 make run-worker`
+
+## Testing the system is working
+
+If you have Kafka installed locally, you can test the system by sending new events
+to the `incoming_tweet` topic. This is achieved by executing the following command
+from the directory where your local installation of Kafka is located:
+
+- `./bin/kafka-console-producer.sh --topic incoming_tweet --bootstrap-server localhost:29092`
+
+After this event is executed, you will be able to send an event such as `{"value": "Hello world"}`.
+Now we should be able to see the model prediction on the `tweet_disaster_inference` topic.
+To check this is indeed the case, we can consume all the events on that topic:
+
+- `./bin/kafka-console-consumer.sh --bootstrap-server localhost:29092 --from-beginning --topic tweet_disaster_inference`
+
+You can send other events and see how the model responds to them. For example, for
+`{"value": "There has been an earthquake at 3:00 pm"}`, the default model contained in
+this repository should return a high score.
+
+If you have made it this far, congratulations! Now you have an application that creates inferences
+from Kafka events in real-time. This is just a very simple application, so feel free to modify it
+and use it as a base for your projects.
 
 ## References
 
