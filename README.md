@@ -7,10 +7,9 @@ Powered by Faust, Kafka, and Tensorflow.
 
 Concretely, the streaming data used here will be text events that could be obtained
 for example from Twitter. The model used on this repository has been obtained following 
-the following notebook's section
-https://www.kaggle.com/code/jagdmir/tweet-analysis-ann-bert-cnn-n-gram-cnn#CNN-with-word-Embeddings.
-The model is created as part of the Kaggle's "Natural Language Processing with Disaster Tweets"
-competition and it can distinguish Tweets that mention a natural disaster from those who
+[this public notebook's section](https://www.kaggle.com/code/jagdmir/tweet-analysis-ann-bert-cnn-n-gram-cnn#CNN-with-word-Embeddings).
+The model is created as part of Kaggle's "Natural Language Processing with Disaster Tweets"
+competition and it can distinguish Tweets that mention a natural disaster from those that
 do not. This model was chosen because of its simplicity. The inference on
 one Tweet should take a fraction of a millisecond. The model is packaged using `bentoml`
 and available in this repository.
