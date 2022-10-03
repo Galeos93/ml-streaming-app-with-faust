@@ -1,7 +1,19 @@
 # ml-streaming-app-with-faust
 
+## Introduction
+
 An app that consumes streaming data and executes model inference in real time.
 Powered by Faust, Kafka, and Tensorflow.
+
+Concretely, the streaming data used here will be text events that could be obtained
+for example from Twitter. The model used on this repository has been obtained following 
+the following notebook's section
+https://www.kaggle.com/code/jagdmir/tweet-analysis-ann-bert-cnn-n-gram-cnn#CNN-with-word-Embeddings.
+The model is created as part of the Kaggle's "Natural Language Processing with Disaster Tweets"
+competition and it can distinguish Tweets that mention a natural disaster from those who
+do not. This model was chosen because of its simplicity. The inference on
+one Tweet should take a fraction of a millisecond. The model is packaged using `bentoml`
+and available in this repository.
 
 ## Motivation of the project
 
@@ -61,7 +73,7 @@ flowchart LR
 ```
 
 Although this is out of the scope of this project, some model servers available
-are aware of the high latencies and offer communication with Kafka Stream applications
+are aware of the high latency and offer communication with Kafka Stream applications
 via the native Kafka protocol, which would eliminate such problem.
 This is covered in [3]. Moreover, TensorFlow I/O offers a way to directly connect
 to a Kafka Cluster to do inferences or even train a model.
@@ -75,7 +87,7 @@ the following commands from the repository's folder:
 - `docker build -t streaming_app .`
 - `docker-compose up`
 
-After the system is up, you need to create a topic for the input tweets. To do so, execute
+After the system is up, you need to create a topic for the input Tweets. To do so, execute
 the following commands on a new terminal:
 
 - `BROKER_URI="kafka-cluster:9092"; docker exec mlstreamingappwithfaust_kafka-cluster_1 /opt/bitnami/kafka/bin/kafka-topics.sh --create --bootstrap-server $BROKER_URI --replication-factor 1 --partitions 3 --topic incoming_tweet`
